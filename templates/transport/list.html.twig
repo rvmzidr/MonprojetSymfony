@@ -1,0 +1,208 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Moyens de Transport - Tunisie Tourisme{% endblock %}
+
+{% block body %}
+<div class="container">
+    <h1 class="mb-4">
+        {% if city is defined %}
+            Moyens de Transport à {{ city.name }}
+        {% else %}
+            Moyens de Transport en Tunisie
+        {% endif %}
+    </h1>
+    
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <p class="lead">
+                {% if city is defined %}
+                    Découvrez les différentes options de transport disponibles pour explorer {{ city.name }} et ses environs.
+                {% else %}
+                    Découvrez les différentes options de transport disponibles pour explorer la Tunisie.
+                {% endif %}
+            </p>
+        </div>
+        <div class="col-md-6">
+            <div class="input-group">
+                <input type="text" class="form-control" id="transportSearch" placeholder="Rechercher un transport...">
+                <button class="btn btn-primary" type="button">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {% if city is defined %}
+        <div class="mb-4">
+            <a href="{{ path('app_city_show', {'id': city.id}) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Retour à {{ city.name }}
+            </a>
+            <a href="{{ path('app_transport_route', {'from': city.id}) }}" class="btn btn-primary ms-2">
+                <i class="fas fa-route me-2"></i>Planifier un itinéraire depuis {{ city.name }}
+            </a>
+        </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Filtres</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Type de transport</h6>
+                    <div class="form-check">
+                        <input class="form-check-input transport-filter" type="checkbox" value="bus" id="filterBus" checked>
+                        <label class="form-check-label" for="filterBus">
+                            Bus
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input transport-filter" type="checkbox" value="train" id="filterTrain" checked>
+                        <label class="form-check-label" for="filterTrain">
+                            Train
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input transport-filter" type="checkbox" value="taxi" id="filterTaxi" checked>
+                        <label class="form-check-label" for="filterTaxi">
+                            Taxi
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input transport-filter" type="checkbox" value="louage" id="filterLouage" checked>
+                        <label class="form-check-label" for="filterLouage">
+                            Louage (Taxi collectif)
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input transport-filter" type="checkbox" value="ferry" id="filterFerry" checked>
+                        <label class="form-check-label" for="filterFerry">
+                            Ferry
+                        </label>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h6>Prix</h6>
+                    <div class="mb-3">
+                        <label for="priceRange" class="form-label">Budget maximum: <span id="priceValue">100</span> DT</label>
+                        <input type="range" class="form-range" min="0" max="200" step="10" value="100" id="priceRange">
+                    </div>
+                    
+                    <button id="resetFilters" class="btn btn-sm btn-outline-secondary w-100">Réinitialiser les filtres</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <div class="row row-cols-1 row-cols-md-2 g-4" id="transportsContainer">
+                {% for transport in transports %}
+                    <div class="col transport-card" data-type="{{ transport.type|lower }}" data-price="{{ transport.price|default(0) }}">
+                        <div class="card h-100">
+                            <div class="row g-0">
+                                <div class="col-md-4">
+                                    {% if transport.image %}
+                                        <img src="{{ transport.image }}" class="img-fluid rounded-start h-100" alt="{{ transport.name }}" style="object-fit: cover;">
+                                    {% else %}
+                                        <img src="/assets/images/transport-placeholder.jpg" class="img-fluid rounded-start h-100" alt="{{ transport.name }}" style="object-fit: cover;">
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-8">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ transport.name }}</h5>
+                                        <p class="card-text">
+                                            <span class="badge bg-primary">{{ transport.type }}</span>
+                                            {% if transport.price %}
+                                                <span class="badge bg-secondary">{{ transport.price }} DT</span>
+                                            {% endif %}
+                                        </p>
+                                        <p class="card-text">{{ transport.description|length > 100 ? transport.description|slice(0, 100) ~ '...' : transport.description }}</p>
+                                        <a href="{{ path('app_transport_route') }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-route me-1"></i>Itinéraires
+                                        </a>
+                                        {% if transport.website %}
+                                            <a href="{{ transport.website }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                                <i class="fas fa-external-link-alt me-1"></i>Site web
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            Aucun moyen de transport n'a été trouvé. Veuillez ajouter des transports à la base de données.
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('transportSearch');
+        const transportCards = document.querySelectorAll('.transport-card');
+        const transportFilters = document.querySelectorAll('.transport-filter');
+        const priceRange = document.getElementById('priceRange');
+        const priceValue = document.getElementById('priceValue');
+        const resetFilters = document.getElementById('resetFilters');
+        
+        // Fonction pour mettre à jour l'affichage des transports
+        function updateTransportDisplay() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const maxPrice = parseInt(priceRange.value);
+            
+            // Récupérer les types de transport sélectionnés
+            const selectedTypes = Array.from(transportFilters)
+                .filter(checkbox => checkbox.checked)
+                .map(checkbox => checkbox.value);
+            
+            // Mettre à jour l'affichage du prix maximum
+            priceValue.textContent = maxPrice;
+            
+            // Filtrer les cartes de transport
+            transportCards.forEach(card => {
+                const transportName = card.querySelector('.card-title').textContent.toLowerCase();
+                const transportDesc = card.querySelector('.card-text:last-child').textContent.toLowerCase();
+                const transportType = card.dataset.type;
+                const transportPrice = parseInt(card.dataset.price) || 0;
+                
+                const matchesSearch = transportName.includes(searchTerm) || transportDesc.includes(searchTerm);
+                const matchesType = selectedTypes.includes(transportType);
+                const matchesPrice = transportPrice <= maxPrice;
+                
+                if (matchesSearch && matchesType && matchesPrice) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+        
+        // Ajouter les écouteurs d'événements
+        searchInput.addEventListener('keyup', updateTransportDisplay);
+        transportFilters.forEach(filter => {
+            filter.addEventListener('change', updateTransportDisplay);
+        });
+        priceRange.addEventListener('input', updateTransportDisplay);
+        
+        // Réinitialiser les filtres
+        resetFilters.addEventListener('click', function() {
+            searchInput.value = '';
+            transportFilters.forEach(filter => {
+                filter.checked = true;
+            });
+            priceRange.value = 100;
+            updateTransportDisplay();
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

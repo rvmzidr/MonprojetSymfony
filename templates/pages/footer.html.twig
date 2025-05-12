@@ -1,0 +1,56 @@
+<footer class="bg-dark text-white py-5 mt-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <h5 class="mb-3">Tunisie Tourisme</h5>
+                <p>Découvrez les merveilles de la Tunisie, ses villes historiques, ses plages magnifiques et sa culture riche.</p>
+                <div class="mt-3">
+                    <a href="#" class="text-white me-3"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="text-white me-3"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="text-white me-3"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="text-white"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+            <div class="col-md-2 mb-4">
+                <h5 class="mb-3">Liens rapides</h5>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><a href="{{ path('app_home') }}" class="text-white text-decoration-none">Accueil</a></li>
+                    <li class="mb-2"><a href="{{ path('app_city_index') }}" class="text-white text-decoration-none">Villes</a></li>
+                    <li class="mb-2"><a href="{{ path('app_transport_index') }}" class="text-white text-decoration-none">Transports</a></li>
+                    <li class="mb-2"><a href="{{ path('app_blog_testimonials') }}" class="text-white text-decoration-none">Témoignages</a></li>
+                    <li class="mb-2"><a href="{{ path('app_about') }}" class="text-white text-decoration-none">À propos</a></li>
+                </ul>
+            </div>
+            <div class="col-md-3 mb-4">
+                <h5 class="mb-3">Villes populaires</h5>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><a href="#" class="text-white text-decoration-none">Tunis</a></li>
+                    <li class="mb-2"><a href="#" class="text-white text-decoration-none">Hammamet</a></li>
+                    <li class="mb-2"><a href="#" class="text-white text-decoration-none">Sousse</a></li>
+                    <li class="mb-2"><a href="#" class="text-white text-decoration-none">Djerba</a></li>
+                    <li class="mb-2"><a href="#" class="text-white text-decoration-none">Monastir</a></li>
+                </ul>
+            </div>
+            <div class="col-md-3 mb-4">
+                <h5 class="mb-3">Contact</h5>
+                <address class="mb-0">
+                    <p class="mb-2"><i class="fas fa-map-marker-alt me-2"></i>Avenue Habib Bourguiba, Tunis</p>
+                    <p class="mb-2"><i class="fas fa-phone me-2"></i>+216 71 123 456</p>
+                    <p class="mb-2"><i class="fas fa-envelope me-2"></i>contact@tunisie-tourisme.com</p>
+                </address>
+            </div>
+        </div>
+        <hr class="my-4">
+        <div class="row">
+            <div class="col-md-6">
+                <p class="mb-0">&copy; {{ "now"|date("Y") }} Tunisie Tourisme. Tous droits réservés.</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <ul class="list-inline mb-0">
+                    <li class="list-inline-item"><a href="#" class="text-white text-decoration-none">Conditions d'utilisation</a></li>
+                    <li class="list-inline-item"><a href="#" class="text-white text-decoration-none">Politique de confidentialité</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</footer>

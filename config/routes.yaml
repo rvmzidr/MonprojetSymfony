@@ -1,0 +1,60 @@
+# Routes principales
+app_home:
+    path: /
+    controller: App\Controller\HomeController::index
+
+app_about:
+    path: /about
+    controller: App\Controller\AboutController::index
+
+# Routes pour les villes
+app_city_index:
+    path: /city
+    controller: App\Controller\CityController::index
+
+app_city_show:
+    path: /city/{id}
+    controller: App\Controller\CityController::show
+    requirements:
+        id: \d+
+
+# Routes pour les transports
+app_transport_index:
+    path: /transport
+    controller: App\Controller\TransportController::index
+
+app_transport_by_city:
+    path: /transport/city/{id}
+    controller: App\Controller\TransportController::transportsByCity
+    requirements:
+        id: \d+
+
+app_transport_route:
+    path: /transport/route
+    controller: App\Controller\TransportController::transportRoute
+
+# Routes pour l'authentification
+app_login:
+    path: /login
+    controller: App\Controller\AuthController::login
+
+app_logout:
+    path: /logout
+    controller: App\Controller\AuthController::logout
+
+app_register:
+    path: /register
+    controller: App\Controller\RegistrationController::register
+
+app_verify_email:
+    path: /verify/email
+    controller: App\Controller\RegistrationController::verifyUserEmail
+
+# Routes pour le blog
+app_blog_testimonials:
+    path: /blog/testimonials
+    controller: App\Controller\BlogController::testimonials
+
+app_pages:
+    path: /pages
+    controller: App\Controller\PagesController::index

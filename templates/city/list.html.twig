@@ -1,0 +1,83 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Villes Touristiques - Tunisie Tourisme{% endblock %}
+
+{% block body %}
+<div class="container">
+    <h1 class="mb-4">Villes Touristiques en Tunisie</h1>
+    
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <p class="lead">Découvrez les plus belles villes de Tunisie, chacune avec son charme unique, son histoire riche et ses attractions fascinantes.</p>
+        </div>
+        <div class="col-md-6">
+            <div class="input-group">
+                <input type="text" class="form-control" id="citySearch" placeholder="Rechercher une ville...">
+                <button class="btn btn-primary" type="button">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="citiesContainer">
+        {% for city in cities %}
+            <div class="col city-card">
+                <div class="card h-100">
+                    {% if city.image %}
+                        <img src="{{ city.image }}" class="card-img-top" alt="{{ city.name }}" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                        <img src="/assets/images/city-placeholder.jpg" class="card-img-top" alt="{{ city.name }}" style="height: 200px; object-fit: cover;">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ city.name }}</h5>
+                        <p class="card-text">
+                            <small class="text-muted"><i class="fas fa-map-marker-alt me-1"></i>{{ city.region }}</small>
+                        </p>
+                        <p class="card-text">{{ city.description|length > 150 ? city.description|slice(0, 150) ~ '...' : city.description }}</p>
+                    </div>
+                    <div class="card-footer bg-transparent border-top-0">
+                        <a href="{{ path('app_city_show', {'id': city.id}) }}" class="btn btn-primary">Découvrir</a>
+                        <a href="{{ path('app_transport_by_city', {'id': city.id}) }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-bus me-1"></i>Transports
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    Aucune ville n'a été trouvée. Veuillez ajouter des villes à la base de données.
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('citySearch');
+        const citiesContainer = document.getElementById('citiesContainer');
+        const cityCards = document.querySelectorAll('.city-card');
+        
+        searchInput.addEventListener('keyup', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            cityCards.forEach(card => {
+                const cityName = card.querySelector('.card-title').textContent.toLowerCase();
+                const cityRegion = card.querySelector('.text-muted').textContent.toLowerCase();
+                const cityDesc = card.querySelector('.card-text:not(:first-child)').textContent.toLowerCase();
+                
+                if (cityName.includes(searchTerm) || cityRegion.includes(searchTerm) || cityDesc.includes(searchTerm)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

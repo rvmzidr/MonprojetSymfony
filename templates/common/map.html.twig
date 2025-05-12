@@ -1,0 +1,42 @@
+<div id="map" style="height: 400px; width: 100%;"></div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap" defer></script>
+<script>
+    function initMap() {
+        // Coordonnées par défaut (centre de la Tunisie)
+        const defaultCenter = { lat: 34.0, lng: 9.0 };
+        
+        // Créer la carte
+        const map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 7,
+            center: defaultCenter,
+        });
+        
+        // Ajouter des marqueurs si des données sont disponibles
+        {% if locations is defined %}
+            {% for location in locations %}
+                const marker{{ loop.index }} = new google.maps.Marker({
+                    position: { lat: {{ location.lat }}, lng: {{ location.lng }} },
+                    map: map,
+                    title: "{{ location.name }}",
+                });
+                
+                const infoWindow{{ loop.index }} = new google.maps.InfoWindow({
+                    content: `
+                        <div>
+                            <h5>{{ location.name }}</h5>
+                            <p>{{ location.description }}</p>
+                            {% if location.link is defined %}
+                                <a href="{{ location.link }}" class="btn btn-sm btn-primary">Plus d'infos</a>
+                            {% endif %}
+                        </div>
+                    `,
+                });
+                
+                marker{{ loop.index }}.addListener("click", () => {
+                    infoWindow{{ loop.index }}.open(map, marker{{ loop.index }});
+                });
+            {% endfor %}
+        {% endif %}
+    }
+</script>

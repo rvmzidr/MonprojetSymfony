@@ -1,0 +1,123 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Accueil - Tunisie Tourisme{% endblock %}
+
+{% block body %}
+    {% include 'pages/header.html.twig' %}
+
+    <div class="hero-section">
+        <div class="container">
+            <h1>Découvrez la Tunisie</h1>
+            <p>Explorez les villes historiques, les plages magnifiques et la culture riche de la Tunisie. Planifiez votre voyage avec notre guide complet des villes touristiques et des moyens de transport.</p>
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <form action="{{ path('app_city_index') }}" method="get" class="d-flex">
+                        <input type="text" name="search" class="form-control form-control-lg me-2" placeholder="Rechercher une ville...">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mt-5">
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h2>Villes populaires</h2>
+                <p class="lead">Découvrez les destinations les plus prisées de Tunisie</p>
+            </div>
+            <div class="col-md-6 text-end">
+                <a href="{{ path('app_city_index') }}" class="btn btn-outline-primary">
+                    Voir toutes les villes <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% for city in featuredCities %}
+                <div class="col">
+                    <div class="card h-100">
+                        {% if city.image %}
+                            <img src="{{ city.image }}" class="card-img-top" alt="{{ city.name }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                            <img src="{{ asset('assets/images/city-placeholder.jpg') }}" class="card-img-top" alt="{{ city.name }}" style="height: 200px; object-fit: cover;">
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ city.name }}</h5>
+                            <p class="card-text">
+                                <small class="text-muted"><i class="fas fa-map-marker-alt me-1"></i>{{ city.region }}</small>
+                            </p>
+                            <p class="card-text">{{ city.description|length > 100 ? city.description|slice(0, 100) ~ '...' : city.description }}</p>
+                        </div>
+                        <div class="card-footer bg-transparent border-top-0">
+                            <a href="{{ path('app_city_show', {'id': city.id}) }}" class="btn btn-primary">Découvrir</a>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        Aucune ville n'a été trouvée. Veuillez ajouter des villes à la base de données.
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="row mt-5">
+            <div class="col-md-12">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h3>Planifiez votre voyage en Tunisie</h3>
+                                <p>Utilisez notre outil de planification d'itinéraire pour trouver les meilleurs moyens de transport entre les villes tunisiennes.</p>
+                            </div>
+                            <div class="col-md-4 text-center text-md-end">
+                                <a href="{{ path('app_transport_route') }}" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-route me-2"></i>Planifier mon itinéraire
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-5">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-map-marked-alt fa-3x text-primary mb-3"></i>
+                        <h4>Villes touristiques</h4>
+                        <p>Découvrez les plus belles villes de Tunisie, leurs attractions et leur histoire.</p>
+                        <a href="{{ path('app_city_index') }}" class="btn btn-outline-primary">Explorer</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-bus fa-3x text-primary mb-3"></i>
+                        <h4>Moyens de transport</h4>
+                        <p>Informez-vous sur les différentes options de transport disponibles en Tunisie.</p>
+                        <a href="{{ path('app_transport_index') }}" class="btn btn-outline-primary">Découvrir</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-user-circle fa-3x text-primary mb-3"></i>
+                        <h4>Créer un compte</h4>
+                        <p>Inscrivez-vous pour sauvegarder vos itinéraires et recevoir des recommandations personnalisées.</p>
+                        <a href="{{ path('app_register') }}" class="btn btn-outline-primary">S'inscrire</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include 'pages/footer.html.twig' %}
+{% endblock %}

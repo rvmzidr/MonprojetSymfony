@@ -1,0 +1,345 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ city.name }} - Tunisie Tourisme{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin="" />
+    <style>
+        #cityMap {
+            height: 400px;
+            width: 100%;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .attraction-card {
+            transition: transform 0.3s;
+        }
+        
+        .attraction-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .rating {
+            color: #ffc107;
+        }
+        
+        .city-header {
+            background-size: cover;
+            background-position: center;
+            color: white;
+            padding: 5rem 0;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        
+        .city-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .city-header-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .nav-pills .nav-link.active {
+            background-color: var(--primary-color);
+        }
+        
+        .nav-pills .nav-link {
+            color: var(--dark-color);
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="city-header" style="background-image: url('{{ city.image ? city.image : '/assets/images/city-placeholder.jpg' }}');">
+    <div class="container city-header-content">
+        <h1 class="display-4">{{ city.name }}</h1>
+        <p class="lead"><i class="fas fa-map-marker-alt me-2"></i>{{ city.region }}</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <ul class="nav nav-pills mb-3" id="cityTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="overview-tab" data-bs-toggle="pill" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">Aperçu</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="attractions-tab" data-bs-toggle="pill" data-bs-target="#attractions" type="button" role="tab" aria-controls="attractions" aria-selected="false">Attractions</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="culture-tab" data-bs-toggle="pill" data-bs-target="#culture" type="button" role="tab" aria-controls="culture" aria-selected="false">Culture</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="map-tab" data-bs-toggle="pill" data-bs-target="#map" type="button" role="tab" aria-controls="map" aria-selected="false">Carte</button>
+                </li>
+            </ul>
+            
+            <div class="tab-content" id="cityTabsContent">
+                <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+                    <h2>À propos de {{ city.name }}</h2>
+                    <p>{{ city.description }}</p>
+                    
+                    {% if enhanced_info.description is defined %}
+                        <p>{{ enhanced_info.description }}</p>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+                        <h3>Attractions populaires</h3>
+                        <a href="#attractions" class="btn btn-sm btn-outline-primary" data-bs-toggle="pill" data-bs-target="#attractions">Voir toutes les attractions</a>
+                    </div>
+                    
+                    <div class="row row-cols-1 row-cols-md-2 g-4">
+                        {% for attraction in city.attractions|slice(0, 4) %}
+                            <div class="col">
+                                <div class="card h-100 attraction-card">
+                                    {% if attraction.image %}
+                                        <img src="{{ attraction.image }}" class="card-img-top" alt="{{ attraction.name }}" style="height: 150px; object-fit: cover;">
+                                    {% else %}
+                                        <img src="/assets/images/attraction-placeholder.jpg" class="card-img-top" alt="{{ attraction.name }}" style="height: 150px; object-fit: cover;">
+                                    {% endif %}
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ attraction.name }}</h5>
+                                        <p class="card-text">{{ attraction.description|length > 100 ? attraction.description|slice(0, 100) ~ '...' : attraction.description }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="tab-pane fade" id="attractions" role="tabpanel" aria-labelledby="attractions-tab">
+                    <h2>Attractions à {{ city.name }}</h2>
+                    
+                    <div class="mb-4">
+                        <form method="get" action="{{ path('app_city_show', {'id': city.id}) }}" class="row g-3">
+                            <div class="col-md-8">
+                                <input type="text" class="form-control" name="preferences" placeholder="Vos préférences (ex: histoire, plage, gastronomie)" value="{{ app.request.query.get('preferences') }}">
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-primary w-100">Personnaliser</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="row row-cols-1 row-cols-md-2 g-4">
+                        {% if attraction_recommendations.error is not defined and attraction_recommendations|length > 0 %}
+                            {% for attraction in attraction_recommendations %}
+                                <div class="col">
+                                    <div class="card h-100 attraction-card">
+                                        <div class="card-body">
+                                            <h5 class="card-title">{{ attraction.nom }}</h5>
+                                            <div class="mb-2">
+                                                {% for i in 1..5 %}
+                                                    {% if i <= attraction.note_sur_5 %}
+                                                        <i class="fas fa-star rating"></i>
+                                                    {% else %}
+                                                        <i class="far fa-star rating"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                            <p class="card-text">{{ attraction.description }}</p>
+                                            <p class="card-text"><small class="text-muted"><i class="fas fa-map-marker-alt me-1"></i>{{ attraction.adresse }}</small></p>
+                                            <p class="card-text"><strong>Pourquoi visiter:</strong> {{ attraction.raison_de_visite }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            {% for attraction in city.attractions %}
+                                <div class="col">
+                                    <div class="card h-100 attraction-card">
+                                        {% if attraction.image %}
+                                            <img src="{{ attraction.image }}" class="card-img-top" alt="{{ attraction.name }}" style="height: 200px; object-fit: cover;">
+                                        {% else %}
+                                            <img src="/assets/images/attraction-placeholder.jpg" class="card-img-top" alt="{{ attraction.name }}" style="height: 200px; object-fit: cover;">
+                                        {% endif %}
+                                        <div class="card-body">
+                                            <h5 class="card-title">{{ attraction.name }}</h5>
+                                            <div class="mb-2">
+                                                {% for i in 1..5 %}
+                                                    {% if i <= (attraction.rating ?? 0) %}
+                                                        <i class="fas fa-star rating"></i>
+                                                    {% else %}
+                                                        <i class="far fa-star rating"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                            <p class="card-text">{{ attraction.description }}</p>
+                                            {% if attraction.address %}
+                                                <p class="card-text"><small class="text-muted"><i class="fas fa-map-marker-alt me-1"></i>{{ attraction.address }}</small></p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="tab-pane fade" id="culture" role="tabpanel" aria-labelledby="culture-tab">
+                    <h2>Culture et traditions</h2>
+                    
+                    {% if enhanced_info.culture is defined %}
+                        <p>{{ enhanced_info.culture }}</p>
+                    {% else %}
+                        <p>Découvrez la riche culture et les traditions de {{ city.name }}. Cette ville tunisienne offre un mélange unique d'influences berbères, arabes, ottomanes et méditerranéennes qui se reflètent dans son architecture, sa cuisine, sa musique et ses festivals.</p>
+                        
+                        <h3>Gastronomie locale</h3>
+                        <p>La cuisine de {{ city.name }} est réputée pour ses saveurs méditerranéennes et ses épices. Ne manquez pas de goûter aux spécialités locales lors de votre visite.</p>
+                        
+                        <h3>Artisanat</h3>
+                        <p>{{ city.name }} est connue pour son artisanat traditionnel, notamment la poterie, les tapis, et les bijoux en argent. Visitez les souks pour découvrir ces trésors faits à la main.</p>
+                        
+                        <h3>Festivals et événements</h3>
+                        <p>Tout au long de l'année, {{ city.name }} accueille divers festivals célébrant la musique, la danse et les traditions locales. Renseignez-vous sur les événements qui pourraient avoir lieu pendant votre séjour.</p>
+                    {% endif %}
+                </div>
+                
+                <div class="tab-pane fade" id="map" role="tabpanel" aria-labelledby="map-tab">
+                    <h2>Carte de {{ city.name }}</h2>
+                    <div id="cityMap"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Transports</h5>
+                </div>
+                <div class="card-body">
+                    <p>Découvrez les moyens de transport disponibles pour visiter {{ city.name }} et ses environs.</p>
+                    <a href="{{ path('app_transport_by_city', {'id': city.id}) }}" class="btn btn-outline-primary w-100">
+                        <i class="fas fa-bus me-2"></i>Voir les transports
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Planifier votre voyage</h5>
+                </div>
+                <div class="card-body">
+                    <p>Trouvez le meilleur itinéraire pour vous rendre à {{ city.name }} depuis une autre ville.</p>
+                    <a href="{{ path('app_transport_route', {'to': city.id}) }}" class="btn btn-outline-primary w-100">
+                        <i class="fas fa-route me-2"></i>Planifier l'itinéraire
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Météo</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h6 class="mb-0">Aujourd'hui</h6>
+                            <small>{{ "now"|date("d M Y") }}</small>
+                        </div>
+                        <div class="text-center">
+                            <i class="fas fa-sun fa-2x text-warning"></i>
+                            <div class="mt-1">28°C</div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row text-center">
+                        <div class="col">
+                            <div>Demain</div>
+                            <i class="fas fa-sun text-warning"></i>
+                            <div>29°C</div>
+                        </div>
+                        <div class="col">
+                            <div>{{ "now"|date_modify("+2 day")|date("D") }}</div>
+                            <i class="fas fa-cloud-sun text-secondary"></i>
+                            <div>27°C</div>
+                        </div>
+                        <div class="col">
+                            <div>{{ "now"|date_modify("+3 day")|date("D") }}</div>
+                            <i class="fas fa-sun text-warning"></i>
+                            <div>30°C</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block javascripts %}
+{{ parent() }}
+<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Activer les onglets via JavaScript
+        const triggerTabList = [].slice.call(document.querySelectorAll('#cityTabs button'));
+        triggerTabList.forEach(function (triggerEl) {
+            const tabTrigger = new bootstrap.Tab(triggerEl);
+            triggerEl.addEventListener('click', function (event) {
+                event.preventDefault();
+                tabTrigger.show();
+            });
+        });
+        
+        // Initialiser la carte quand l'onglet est affiché
+        document.getElementById('map-tab').addEventListener('shown.bs.tab', function (event) {
+            initMap();
+        });
+        
+        // Fonction pour initialiser la carte
+        function initMap() {
+            // Coordonnées approximatives pour les villes tunisiennes
+            const coordinates = {
+                'Tunis': [36.8065, 10.1815],
+                'Hammamet': [36.4000, 10.6167],
+                'Sousse': [35.8333, 10.6333],
+                'Monastir': [35.7780, 10.8262],
+                'Djerba': [33.8075, 10.8451],
+                'Carthage': [36.8528, 10.3233],
+                'Sfax': [34.7400, 10.7600],
+                'Tabarka': [36.9547, 8.7581],
+                'Tozeur': [33.9200, 8.1300],
+                'Kairouan': [35.6781, 10.0969]
+            };
+            
+            // Utiliser les coordonnées de la ville ou par défaut Tunis
+            const cityName = "{{ city.name }}";
+            const cityCoords = coordinates[cityName] || coordinates['Tunis'];
+            
+            // Initialiser la carte
+            const map = L.map('cityMap').setView(cityCoords, 13);
+            
+            // Ajouter la couche de tuiles OpenStreetMap
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            
+            // Ajouter un marqueur pour la ville
+            L.marker(cityCoords).addTo(map)
+                .bindPopup(`<b>${cityName}</b><br>Cliquez pour explorer`).openPopup();
+            
+            // Ajouter des marqueurs pour les attractions
+            {% for attraction in city.attractions %}
+                // Ajouter un décalage aléatoire pour visualiser les attractions
+                const lat = cityCoords[0] + (Math.random() - 0.5) * 0.02;
+                const lng = cityCoords[1] + (Math.random() - 0.5) * 0.02;
+                
+                L.marker([lat, lng]).addTo(map)
+                    .bindPopup(`<b>{{ attraction.name }}</b><br>{{ attraction.description|length > 100 ? attraction.description|slice(0, 100) ~ '...' : attraction.description }}`);
+            {% endfor %}
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

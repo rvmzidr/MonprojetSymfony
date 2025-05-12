@@ -1,0 +1,142 @@
+{% extends 'base.html.twig' %}
+
+
+{% block title %}À propos - Tunisie Tourisme{% endblock %}
+
+{% block body %}
+    {% include 'pages/header.html.twig' %}
+
+    <div class="container py-5">
+        <div class="row mb-5">
+            <div class="col-md-12">
+                <h1 class="mb-4">À propos de Tunisie Tourisme</h1>
+                <p class="lead">Bienvenue sur Tunisie Tourisme, votre guide complet pour découvrir les merveilles de la Tunisie.</p>
+            </div>
+        </div>
+        
+        <div class="row mb-5">
+            <div class="col-md-6">
+                <h2>Notre mission</h2>
+                <p>Tunisie Tourisme a été créé pour aider les voyageurs à découvrir la beauté et la richesse culturelle de la Tunisie. Notre mission est de fournir des informations précises et à jour sur les villes touristiques, les attractions et les moyens de transport en Tunisie.</p>
+                <p>Nous nous efforçons de rendre votre voyage en Tunisie aussi agréable et enrichissant que possible en vous offrant des conseils pratiques, des recommandations personnalisées et des outils de planification d'itinéraire.</p>
+            </div>
+            <div class="col-md-6">
+                <img src="{{ asset('assets/images/tunisia-map.jpg') }}" alt="Carte de la Tunisie" class="img-fluid rounded shadow">
+            </div>
+        </div>
+        
+        <div class="row mb-5">
+            <div class="col-md-12">
+                <h2>Pourquoi visiter la Tunisie ?</h2>
+                <div class="row mt-4">
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-landmark text-primary me-2"></i>Riche patrimoine historique</h5>
+                                <p class="card-text">La Tunisie abrite de nombreux sites historiques, dont Carthage, El Jem et Dougga, témoins de son passé riche et varié.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-umbrella-beach text-primary me-2"></i>Plages magnifiques</h5>
+                                <p class="card-text">Avec plus de 1300 km de côtes, la Tunisie offre des plages de sable fin et des eaux cristallines, idéales pour la détente et les activités nautiques.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-utensils text-primary me-2"></i>Gastronomie délicieuse</h5>
+                                <p class="card-text">La cuisine tunisienne, mélange d'influences méditerranéennes et nord-africaines, est réputée pour ses saveurs riches et ses épices.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-users text-primary me-2"></i>Hospitalité tunisienne</h5>
+                                <p class="card-text">Les Tunisiens sont connus pour leur chaleur et leur hospitalité, rendant votre séjour encore plus agréable et mémorable.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-mountain text-primary me-2"></i>Paysages diversifiés</h5>
+                                <p class="card-text">Des plages méditerranéennes aux dunes du Sahara, en passant par les montagnes et les oasis, la Tunisie offre une diversité de paysages à couper le souffle.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-shopping-bag text-primary me-2"></i>Artisanat traditionnel</h5>
+                                <p class="card-text">Découvrez l'artisanat tunisien, des tapis berbères aux poteries colorées, en passant par les bijoux en argent et les parfums.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mb-5">
+            <div class="col-md-12">
+                <h2>Notre équipe</h2>
+                <p>Tunisie Tourisme est géré par une équipe passionnée de Tunisiens et d'experts du tourisme qui connaissent parfaitement le pays et ses trésors cachés.</p>
+                <div class="row mt-4">
+                    <div class="col-md-4 mb-4 text-center">
+                        <img src="{{ asset('assets/images/team-1.jpg') }}" alt="Membre de l'équipe" class="rounded-circle mb-3" width="150" height="150">
+                        <h5>Ahmed Ben Ali</h5>
+                        <p class="text-muted">Fondateur & Directeur</p>
+                    </div>
+                    <div class="col-md-4 mb-4 text-center">
+                        <img src="{{ asset('assets/images/team-2.jpg') }}" alt="Membre de l'équipe" class="rounded-circle mb-3" width="150" height="150">
+                        <h5>Sonia Mansour</h5>
+                        <p class="text-muted">Responsable des contenus</p>
+                    </div>
+                    <div class="col-md-4 mb-4 text-center">
+                        <img src="{{ asset('assets/images/team-3.jpg') }}" alt="Membre de l'équipe" class="rounded-circle mb-3" width="150" height="150">
+                        <h5>Karim Trabelsi</h5>
+                        <p class="text-muted">Expert en transport</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h2>Contactez-nous</h2>
+                        <p>Vous avez des questions ou des suggestions ? N'hésitez pas à nous contacter !</p>
+                        <form>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="name" class="form-label">Nom</label>
+                                    <input type="text" class="form-control" id="name" placeholder="Votre nom">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" placeholder="votre@email.com">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="subject" class="form-label">Sujet</label>
+                                <input type="text" class="form-control" id="subject" placeholder="Sujet de votre message">
+                            </div>
+                            <div class="mb-3">
+                                <label for="message" class="form-label">Message</label>
+                                <textarea class="form-control" id="message" rows="5" placeholder="Votre message"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Envoyer</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include 'pages/footer.html.twig' %}
+{% endblock %}

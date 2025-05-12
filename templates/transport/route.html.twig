@@ -1,0 +1,519 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Planifier votre itinéraire - Tunisie Tourisme{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin="" />
+    <style>
+        #routeMap {
+            height: 500px;
+            width: 100%;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .transport-option {
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        
+        .transport-option:hover {
+            transform: translateY(-3px);
+        }
+        
+        .transport-option.selected {
+            border: 2px solid var(--primary-color);
+        }
+        
+        .route-info {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="container">
+    <h1 class="mb-4">Planifier votre itinéraire</h1>
+    
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" action="{{ path('app_transport_route') }}" class="row g-3">
+                        <div class="col-md-5">
+                            <label for="fromCity" class="form-label">Ville de départ</label>
+                            <select class="form-select" id="fromCity" name="from" required>
+                                <option value="">Sélectionnez une ville</option>
+                                {% for city in cities %}
+                                    <option value="{{ city.id }}" {% if from_city and from_city.id == city.id %}selected{% endif %}>{{ city.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label for="toCity" class="form-label">Ville d'arrivée</label>
+                            <select class="form-select" id="toCity" name="to" required>
+                                <option value="">Sélectionnez une ville</option>
+                                {% for city in cities %}
+                                    <option value="{{ city.id }}" {% if to_city and to_city.id == city.id %}selected{% endif %}>{{ city.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">Rechercher</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if from_city and to_city %}
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="route-info">
+                    <h2>Itinéraire: {{ from_city.name }} → {{ to_city.name }}</h2>
+                    <p>Découvrez les différentes options de transport pour voyager de {{ from_city.name }} à {{ to_city.name }}.</p>
+                </div>
+                
+                <div id="routeMap"></div>
+            </div>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <h3>Options de transport disponibles</h3>
+                
+                {% if transport_info.error is defined %}
+                    <div class="alert alert-warning">
+                        {{ transport_info.error }}
+                    </div>
+                {% else %}
+                    <div class="row row-cols-1 row-cols-md-3 g-4" id="transportOptions">
+                        {% if transport_info|length > 0 %}
+                            {% for transport in transport_info %}
+                                <div class="col">
+                                    <div class="card h-100 transport-option" data-transport-type="{{ transport.type|default('') }}">
+                                        <div class="card-body">
+                                            <h5 class="card-title">{{ transport.type }}</h5>
+                                            <p class="card-text">{{ transport.description }}</p>
+                                            <div class="d-flex justify-content-between">
+                                                <span><i class="fas fa-money-bill-wave me-1"></i>{{ transport.prix_approximatif }}</span>
+                                                <span><i class="fas fa-clock me-1"></i>{{ transport.durée_approximative }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="card-footer bg-transparent">
+                                            <button class="btn btn-sm btn-outline-primary w-100 select-transport">
+                                                <i class="fas fa-check me-1"></i>Sélectionner
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    Aucune information de transport n'est disponible pour cet itinéraire. Veuillez essayer un autre itinéraire.
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="row" id="selectedTransportDetails" style="display: none;">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Détails de l'itinéraire</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Résumé</h5>
+                                <ul class="list-group list-group-flush mb-3">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Départ
+                                        <span>{{ from_city.name }}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Arrivée
+                                        <span>{{ to_city.name }}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Moyen de transport
+                                        <span id="transportTypeDisplay">-</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Durée estimée
+                                        <span id="transportDurationDisplay">-</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Prix approximatif
+                                        <span id="transportPriceDisplay">-</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Conseils de voyage</h5>
+                                <div id="transportTips">
+                                    <p>Sélectionnez un moyen de transport pour voir les conseils spécifiques.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                            <button class="btn btn-outline-secondary me-md-2" type="button">
+                                <i class="fas fa-print me-1"></i>Imprimer
+                            </button>
+                            <button class="btn btn-primary" type="button">
+                                <i class="fas fa-save me-1"></i>Enregistrer l'itinéraire
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% elseif from_city %}
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="route-info">
+                    <h2>Transports disponibles à {{ from_city.name }}</h2>
+                    <p>Découvrez les différentes options de transport disponibles à {{ from_city.name }}.</p>
+                </div>
+                
+                <div id="cityMap"></div>
+            </div>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <h3>Options de transport locales</h3>
+                
+                {% if transport_info.error is defined %}
+                    <div class="alert alert-warning">
+                        {{ transport_info.error }}
+                    </div>
+                {% else %}
+                    <div class="row row-cols-1 row-cols-md-3 g-4">
+                        {% if transport_info|length > 0 %}
+                            {% for transport in transport_info %}
+                                <div class="col">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <h5 class="card-title">{{ transport.type }}</h5>
+                                            <p class="card-text">{{ transport.description }}</p>
+                                            <div class="d-flex justify-content-between">
+                                                <span><i class="fas fa-money-bill-wave me-1"></i>{{ transport.prix_approximatif }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    Aucune information de transport n'est disponible pour cette ville. Veuillez essayer une autre ville.
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+        <div class="row">
+            <div class="col-md-12">
+                <div class="alert alert-info">
+                    Veuillez sélectionner une ville de départ et une ville d'arrivée pour voir les options de transport disponibles.
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+{% block javascripts %}
+{{ parent() }}
+<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Coordonnées approximatives pour les villes tunisiennes
+        const coordinates = {
+            'Tunis': [36.8065, 10.1815],
+            'Hammamet': [36.4000, 10.6167],
+            'Sousse': [35.8333, 10.6333],
+            'Monastir': [35.7780, 10.8262],
+            'Djerba': [33.8075, 10.8451],
+            'Carthage': [36.8528, 10.3233],
+            'Sfax': [34.7400, 10.7600],
+            'Tabarka': [36.9547, 8.7581],
+            'Tozeur': [33.9200, 8.1300],
+            'Kairouan': [35.6781, 10.0969]
+        };
+        
+        {% if from_city and to_city %}
+            // Initialiser la carte pour l'itinéraire
+            const fromCityName = "{{ from_city.name }}";
+            const toCityName = "{{ to_city.name }}";
+            
+            const fromCoords = coordinates[fromCityName] || [36.8065, 10.1815]; // Tunis par défaut
+            const toCoords = coordinates[toCityName] || [35.8333, 10.6333]; // Sousse par défaut
+            
+            // Calculer le centre et le zoom pour afficher les deux villes
+            const centerLat = (fromCoords[0] + toCoords[0]) / 2;
+            const centerLng = (fromCoords[1] + toCoords[1]) / 2;
+            
+            const map = L.map('routeMap').setView([centerLat, centerLng], 8);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            
+            // Ajouter des marqueurs pour les villes
+            L.marker(fromCoords).addTo(map)
+                .bindPopup(`<b>${fromCityName}</b><br>Ville de départ`);
+                
+            L.marker(toCoords).addTo(map)
+                .bindPopup(`<b>${toCityName}</b><br>Ville d'arrivée`);
+                
+            // Tracer une ligne entre les deux villes
+            const polyline = L.polyline([fromCoords, toCoords], {color: 'blue', weight: 3}).addTo(map);
+            
+            // Ajuster la vue pour montrer tout l'itinéraire
+            map.fitBounds(polyline.getBounds(), {padding: [50, 50]});
+            
+            // Gérer la sélection d'un moyen de transport
+            const transportOptions = document.querySelectorAll('.transport-option');
+            const selectedTransportDetails = document.getElementById('selectedTransportDetails');
+            const transportTypeDisplay = document.getElementById('transportTypeDisplay');
+            const transportDurationDisplay = document.getElementById('transportDurationDisplay');
+            const transportPriceDisplay = document.getElementById('transportPriceDisplay');
+            const transportTips = document.getElementById('transportTips');
+            
+            transportOptions.forEach(option => {
+                const selectButton = option.querySelector('.select-transport');
+                
+                selectButton.addEventListener('click', function() {
+                    // Retirer la classe selected de toutes les options
+                    transportOptions.forEach(opt => opt.classList.remove('selected'));
+                    
+                    // Ajouter la classe selected à l'option cliquée
+                    option.classList.add('selected');
+                    
+                    // Afficher les détails
+                    selectedTransportDetails.style.display = 'block';
+                    
+                    // Mettre à jour les informations
+                    const transportType = option.dataset.transportType;
+                    const transportInfo = {
+                        {% for transport in transport_info %}
+                            '{{ transport.type }}': {
+                                duration: '{{ transport.durée_approximative }}',
+                                price: '{{ transport.prix_approximatif }}',
+                                tips: getTipsForTransport('{{ transport.type }}')
+                            },
+                        {% endfor %}
+                    };
+                    
+                    transportTypeDisplay.textContent = transportType;
+                    transportDurationDisplay.textContent = transportInfo[transportType].duration;
+                    transportPriceDisplay.textContent = transportInfo[transportType].price;
+                    transportTips.innerHTML = transportInfo[transportType].tips;
+                    
+                    // Mettre à jour la carte avec un itinéraire spécifique au transport
+                    updateRouteOnMap(map, fromCoords, toCoords, transportType);
+                });
+            });
+            
+            function getTipsForTransport(type) {
+                const tips = {
+                    'Bus': `
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item"><i class="fas fa-info-circle me-2 text-primary"></i>Achetez votre billet à l'avance, surtout pendant la haute saison.</li>
+                            <li class="list-group-item"><i class="fas fa-info-circle me-2 text-primary"></i>Arrivez à la gare au moins 30 minutes avant le départ.</li>
+                            <li class="list-group-item"><i class="fas fa-info-circle me-2 text-primary"></i>Les bus de la SNTRI sont généralement plus confortables.</li>
+                        </ul>
+                    `,
+                    'Train': `
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item"><i class="fas fa-info-circle me-2 text-primary"></i>Les trains de première classe sont recommandés pour plus de confort.</li>
+                            <li class="list-group-item"><i class="fas fa-info-circle me-2 text-primary"></i>Vérifiez les horaires sur le site de la SNCFT avant votre voyage.</li>
+                            <li class="list-group-item"><i class="fas fa-info-circle me-2 text-primary"></i>Gardez votre billet jusqu'à la sortie de la gare d'arrivée.</li>
+                        </ul>
+                    `,
+                    'Taxi': `
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item"><i class="fas fa-info-circle me-2 text-primary"></i>Assurez-vous que le chauffeur utilise le compteur ou négociez le prix avant de monter.</li>
+                            <li class="list-group-item"><i class="fas fa-info-circle me-2 text-primary"></i>Les taxis officiels en Tunisie sont généralement jaunes.</li>
+                            <li class="list-group-item"><i class="fas fa-info-circle me-2 text-primary"></i>Gardez de la petite monnaie pour le paiement.</li>
+                        </ul>
+                    `,
+                    'Louage': `
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item"><i class="fas fa-info-circle me-2 text-primary"></i>Les louages partent quand ils sont pleins, il n'y a pas d'horaire fixe.</li>
+                            <li class="list-group-item"><i class="fas fa-info-circle me-2 text-primary"></i>Ils sont généralement plus rapides que les bus mais moins confortables.</li>
+                            <li class="list-group-item"><i class="fas fa-info-circle me-2 text-primary"></i>Chaque station de louage dessert des destinations spécifiques.</li>
+                        </ul>
+                    `,
+                    'Ferry': `
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item"><i class="fas fa-info-circle me-2 text-primary"></i>Réservez votre billet à l'avance, surtout en été.</li>
+                            <li class="list-group-item"><i class="fas fa-info-circle me-2 text-primary"></i>Arrivez au port au moins 1 heure avant le départ.</li>
+                            <li class="list-group-item"><i class="fas fa-info-circle me-2 text-primary"></i>Vérifiez les conditions météorologiques avant votre voyage.</li>
+                        </ul>
+                    `
+                };
+                
+                return tips[type] || `<p>Aucun conseil spécifique disponible pour ce moyen de transport.</p>`;
+            }
+            
+            function updateRouteOnMap(map, fromCoords, toCoords, transportType) {
+                // Supprimer les anciennes lignes
+                map.eachLayer(function(layer) {
+                    if (layer instanceof L.Polyline && !(layer instanceof L.Marker)) {
+                        map.removeLayer(layer);
+                    }
+                });
+                
+                // Ajouter une nouvelle ligne selon le type de transport
+                let routeCoords = [fromCoords, toCoords];
+                let routeColor = 'blue';
+                
+                // Ajouter des points intermédiaires pour certains types de transport
+                if (transportType === 'Train') {
+                    // Simuler un itinéraire de train avec des arrêts
+                    const midLat1 = fromCoords[0] - (fromCoords[0] - toCoords[0]) * 0.3;
+                    const midLng1 = fromCoords[1] - (fromCoords[1] - toCoords[1]) * 0.3;
+                    
+                    const midLat2 = fromCoords[0] - (fromCoords[0] - toCoords[0]) * 0.7;
+                    const midLng2 = fromCoords[1] - (fromCoords[1] - toCoords[1]) * 0.7;
+                    
+                    routeCoords = [fromCoords, [midLat1, midLng1], [midLat2, midLng2], toCoords];
+                    routeColor = '#800080'; // Violet pour le train
+                    
+                    // Ajouter des marqueurs pour les arrêts
+                    L.marker([midLat1, midLng1]).addTo(map)
+                        .bindPopup('Arrêt intermédiaire');
+                    L.marker([midLat2, midLng2]).addTo(map)
+                        .bindPopup('Arrêt intermédiaire');
+                } else if (transportType === 'Bus') {
+                    // Simuler un itinéraire de bus avec plusieurs arrêts
+                    const steps = 4; // Nombre d'arrêts
+                    routeCoords = [fromCoords];
+                    
+                    for (let i = 1; i < steps; i++) {
+                        const ratio = i / steps;
+                        const lat = fromCoords[0] - (fromCoords[0] - toCoords[0]) * ratio;
+                        const lng = fromCoords[1] - (fromCoords[1] - toCoords[1]) * ratio;
+                        
+                        // Ajouter un peu de variation pour que la route ne soit pas une ligne droite
+                        const latVar = (Math.random() - 0.5) * 0.05;
+                        const lngVar = (Math.random() - 0.5) * 0.05;
+                        
+                        routeCoords.push([lat + latVar, lng + lngVar]);
+                        
+                        // Ajouter un marqueur pour l'arrêt
+                        if (i < steps - 1) {
+                            L.marker([lat + latVar, lng + lngVar]).addTo(map)
+                                .bindPopup(`Arrêt de bus ${i}`);
+                        }
+                    }
+                    
+                    routeCoords.push(toCoords);
+                    routeColor = '#008000'; // Vert pour le bus
+                } else if (transportType === 'Ferry') {
+                    // Simuler un itinéraire maritime avec une courbe
+                    const steps = 10;
+                    routeCoords = [];
+                    
+                    for (let i = 0; i <= steps; i++) {
+                        const ratio = i / steps;
+                        const lat = fromCoords[0] + (toCoords[0] - fromCoords[0]) * ratio;
+                        const lng = fromCoords[1] + (toCoords[1] - fromCoords[1]) * ratio;
+                        
+                        // Ajouter une courbe
+                        const midPointRatio = 0.5;
+                        const curveStrength = 0.1;
+                        const curve = Math.sin((ratio - midPointRatio) * Math.PI) * curveStrength;
+                        
+                        routeCoords.push([lat + curve, lng]);
+                    }
+                    
+                    routeColor = '#1E90FF'; // Bleu pour le ferry
+                } else if (transportType === 'Taxi' || transportType === 'Louage') {
+                    // Route directe pour taxi et louage
+                    routeColor = transportType === 'Taxi' ? '#FFD700' : '#FF4500'; // Jaune pour taxi, orange pour louage
+                }
+                
+                // Tracer la nouvelle ligne
+                const polyline = L.polyline(routeCoords, {color: routeColor, weight: 4}).addTo(map);
+                
+                // Ajuster la vue
+                map.fitBounds(polyline.getBounds(), {padding: [50, 50]});
+            }
+        {% elseif from_city %}
+            // Initialiser la carte pour une seule ville
+            const cityName = "{{ from_city.name }}";
+            const cityCoords = coordinates[cityName] || [36.8065, 10.1815]; // Tunis par défaut
+            
+            const map = L.map('cityMap').setView(cityCoords, 13);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            
+            // Ajouter un marqueur pour la ville
+            L.marker(cityCoords).addTo(map)
+                .bindPopup(`<b>${cityName}</b><br>Explorez les transports disponibles`).openPopup();
+                
+            // Ajouter des marqueurs pour les points d'intérêt de transport
+            const transportPoints = [
+                {name: 'Gare centrale', type: 'train', lat: cityCoords[0] + 0.01, lng: cityCoords[1] - 0.01},
+                {name: 'Station de bus', type: 'bus', lat: cityCoords[0] - 0.01, lng: cityCoords[1] + 0.01},
+                {name: 'Station de louage', type: 'louage', lat: cityCoords[0] + 0.015, lng: cityCoords[1] + 0.01},
+                {name: 'Station de taxi', type: 'taxi', lat: cityCoords[0] - 0.008, lng: cityCoords[1] - 0.012}
+            ];
+            
+            transportPoints.forEach(point => {
+                let icon = L.divIcon({
+                    html: `<i class="fas fa-${getIconForTransport(point.type)} fa-2x" style="color: ${getColorForTransport(point.type)};"></i>`,
+                    className: 'transport-icon',
+                    iconSize: [20, 20]
+                });
+                
+                L.marker([point.lat, point.lng], {icon: icon}).addTo(map)
+                    .bindPopup(`<b>${point.name}</b><br>Type: ${point.type}`);
+            });
+            
+            function getIconForTransport(type) {
+                const icons = {
+                    'train': 'train',
+                    'bus': 'bus',
+                    'louage': 'shuttle-van',
+                    'taxi': 'taxi',
+                    'ferry': 'ship'
+                };
+                
+                return icons[type] || 'car';
+            }
+            
+            function getColorForTransport(type) {
+                const colors = {
+                    'train': '#800080', // Violet
+                    'bus': '#008000', // Vert
+                    'louage': '#FF4500', // Orange
+                    'taxi': '#FFD700', // Jaune
+                    'ferry': '#1E90FF' // Bleu
+                };
+                
+                return colors[type] || '#000000';
+            }
+        {% endif %}
+    });
+</script>
+{% endblock %}
+{% endblock %}
