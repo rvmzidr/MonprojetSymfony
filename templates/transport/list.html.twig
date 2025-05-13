@@ -103,7 +103,7 @@
                             <div class="row g-0">
                                 <div class="col-md-4">
                                     {% if transport.image %}
-                                        <img src="{{ transport.image }}" class="img-fluid rounded-start h-100" alt="{{ transport.name }}" style="object-fit: cover;">
+                                        <img src="{{ asset('assets/images/transports/' ~ transport.image) }}" class="card-img-top" alt="{{ transport.name }}" style="height: 200px; object-fit: cover;">
                                     {% else %}
                                         <img src="/assets/images/transport-placeholder.jpg" class="img-fluid rounded-start h-100" alt="{{ transport.name }}" style="object-fit: cover;">
                                     {% endif %}

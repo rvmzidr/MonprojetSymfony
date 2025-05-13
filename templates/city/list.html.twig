@@ -25,14 +25,14 @@
             <div class="col city-card">
                 <div class="card h-100">
                     {% if city.image %}
-                        <img src="{{ city.image }}" class="card-img-top" alt="{{ city.name }}" style="height: 200px; object-fit: cover;">
+                        <img src="{{ asset('assets/images/cities/' ~ city.image) }}" class="card-img-top" alt="{{ city.name }}" style="height: 200px; object-fit: cover;">
                     {% else %}
-                        <img src="/assets/images/city-placeholder.jpg" class="card-img-top" alt="{{ city.name }}" style="height: 200px; object-fit: cover;">
+                        <img src="{{ asset('assets/images/cities/placeholder.jpg') }}" class="card-img-top" alt="{{ city.name }}" style="height: 200px; object-fit: cover;">
                     {% endif %}
                     <div class="card-body">
                         <h5 class="card-title">{{ city.name }}</h5>
                         <p class="card-text">
-                            <small class="text-muted"><i class="fas fa-map-marker-alt me-1"></i>{{ city.region }}</small>
+                            <small class="text-muted"><i class="fas fa-map-marker-alt me-1"></i>{{ city.region ?? 'Tunisie' }}</small>
                         </p>
                         <p class="card-text">{{ city.description|length > 150 ? city.description|slice(0, 150) ~ '...' : city.description }}</p>
                     </div>
